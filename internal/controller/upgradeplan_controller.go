@@ -87,7 +87,7 @@ func (r *UpgradePlanReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *UpgradePlanReconciler) getReleaseManifest(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan) (*lifecyclev1alpha1.ReleaseManifest, error) {
 	manifest := &lifecyclev1alpha1.ReleaseManifest{}
 	namespacedName := types.NamespacedName{
-		Name:      upgradePlan.Name,
+		Name:      upgradePlan.Spec.ReleaseRef,
 		Namespace: upgradePlan.Namespace,
 	}
 
