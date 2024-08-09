@@ -89,10 +89,12 @@ spec:
                     items:
                       properties:
                         addonCharts:
+                          description: https://github.com/kubernetes-sigs/controller-tools/issues/585
                           x-kubernetes-preserve-unknown-fields: true
                         chart:
                           type: string
                         dependencyCharts:
+                          description: https://github.com/kubernetes-sigs/controller-tools/issues/585
                           x-kubernetes-preserve-unknown-fields: true
                         prettyName:
                           type: string

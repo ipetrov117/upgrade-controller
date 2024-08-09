@@ -41,10 +41,12 @@ type HelmChart struct {
 	Repository  string `json:"repository,omitempty"`
 	Version     string `json:"version"`
 	PrettyName  string `json:"prettyName,omitempty"`
+	// https://github.com/kubernetes-sigs/controller-tools/issues/585
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:validation:Schemaless
 	DependencyCharts []HelmChart `json:"dependencyCharts,omitempty"`
+	// https://github.com/kubernetes-sigs/controller-tools/issues/585
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
 	// +kubebuilder:validation:Schemaless
