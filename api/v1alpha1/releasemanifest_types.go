@@ -35,7 +35,7 @@ type Components struct {
 	// +optional
 	OperatingSystem OperatingSystem `json:"operatingSystem"`
 	// +optional
-	Workloads []HelmChart `json:"workloads"`
+	Workloads []HelmChart `json:"workloads,omitempty"`
 }
 
 type HelmChart struct {
