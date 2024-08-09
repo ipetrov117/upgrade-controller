@@ -100,7 +100,7 @@ func (r *UpgradePlanReconciler) getReleaseManifest(ctx context.Context, upgradeP
 func (r *UpgradePlanReconciler) executePlan(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan) (ctrl.Result, error) {
 	manifest, err := r.getReleaseManifest(ctx, upgradePlan)
 	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("Err with release manifest: %w", err)
+		return ctrl.Result{}, fmt.Errorf("err with release manifest: %w", err)
 	}
 
 	if len(upgradePlan.Status.Conditions) == 0 {

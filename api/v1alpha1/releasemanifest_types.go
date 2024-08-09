@@ -30,19 +30,24 @@ type ReleaseManifestSpec struct {
 }
 
 type Components struct {
-	Kubernetes      Kubernetes      `json:"kubernetes"`
+	// +optional
+	Kubernetes Kubernetes `json:"kubernetes"`
+	// +optional
 	OperatingSystem OperatingSystem `json:"operatingSystem"`
-	Workloads       []HelmChart     `json:"workloads"`
+	// +optional
+	Workloads []HelmChart `json:"workloads"`
 }
 
 type HelmChart struct {
-	ReleaseName      string      `json:"releaseName"`
-	Name             string      `json:"chart"`
-	Repository       string      `json:"repository,omitempty"`
-	Version          string      `json:"version"`
-	PrettyName       string      `json:"prettyName,omitempty"`
+	ReleaseName string `json:"releaseName"`
+	Name        string `json:"chart"`
+	Repository  string `json:"repository,omitempty"`
+	Version     string `json:"version"`
+	PrettyName  string `json:"prettyName,omitempty"`
+	// +optional
 	DependencyCharts []HelmChart `json:"dependencyCharts,omitempty"`
-	AddonCharts      []HelmChart `json:"addonCharts,omitempty"`
+	// +optional
+	AddonCharts []HelmChart `json:"addonCharts,omitempty"`
 }
 
 type Kubernetes struct {
