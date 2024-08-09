@@ -35,6 +35,7 @@ type Components struct {
 	// +optional
 	OperatingSystem OperatingSystem `json:"operatingSystem"`
 	// +optional
+	// +kubebuilder:validation:Items={"type":"object"}
 	Workloads []HelmChart `json:"workloads,omitempty"`
 }
 
@@ -51,9 +52,11 @@ type HelmChart struct {
 	PrettyName string `json:"prettyName,omitempty"`
 	// +optional
 	// +kubebuilder:validation:Type=array
+	// +kubebuilder:validation:Items={"type":"object"}
 	DependencyCharts []HelmChart `json:"dependencyCharts,omitempty"`
 	// +optional
 	// +kubebuilder:validation:Type=array
+	// +kubebuilder:validation:Items={"type":"object"}
 	AddonCharts []HelmChart `json:"addonCharts,omitempty"`
 }
 
