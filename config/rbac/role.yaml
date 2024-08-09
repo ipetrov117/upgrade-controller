@@ -61,6 +61,18 @@ rules:
 - apiGroups:
   - lifecycle.suse.com
   resources:
+  - releasemanifests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - lifecycle.suse.com
+  resources:
   - upgradeplans
   verbs:
   - create
