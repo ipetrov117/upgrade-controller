@@ -25,14 +25,14 @@ import (
 
 // ReleaseManifestSpec defines the desired state of ReleaseManifest
 type ReleaseManifestSpec struct {
-	ReleaseVersion string     `json:"releaseVersion"`
-	Components     Components `json:"components,omitempty"`
+	// ReleaseVersion string     `json:"releaseVersion"`
+	Components Components `json:"components,omitempty"`
 }
 
 type Components struct {
-	Kubernetes      Kubernetes      `json:"kubernetes"`
-	OperatingSystem OperatingSystem `json:"operatingSystem"`
-	Workloads       []HelmChart     `json:"workloads,omitempty"`
+	// Kubernetes      Kubernetes      `json:"kubernetes"`
+	// OperatingSystem OperatingSystem `json:"operatingSystem"`
+	Workloads []HelmChart `json:"workloads,omitempty"`
 }
 
 type HelmChart struct {

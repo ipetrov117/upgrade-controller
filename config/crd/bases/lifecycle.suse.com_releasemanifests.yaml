@@ -40,52 +40,12 @@ spec:
             description: ReleaseManifestSpec defines the desired state of ReleaseManifest
             properties:
               components:
+                description: ReleaseVersion string     `json:"releaseVersion"`
                 properties:
-                  kubernetes:
-                    properties:
-                      k3s:
-                        properties:
-                          version:
-                            type: string
-                        required:
-                        - version
-                        type: object
-                      rke2:
-                        properties:
-                          version:
-                            type: string
-                        required:
-                        - version
-                        type: object
-                    required:
-                    - k3s
-                    - rke2
-                    type: object
-                  operatingSystem:
-                    properties:
-                      cpeScheme:
-                        type: string
-                      prettyName:
-                        type: string
-                      repoGPGPath:
-                        type: string
-                      supportedArchs:
-                        items:
-                          type: string
-                        type: array
-                      version:
-                        type: string
-                      zypperID:
-                        type: string
-                    required:
-                    - cpeScheme
-                    - prettyName
-                    - repoGPGPath
-                    - supportedArchs
-                    - version
-                    - zypperID
-                    type: object
                   workloads:
+                    description: |-
+                      Kubernetes      Kubernetes      `json:"kubernetes"`
+                      OperatingSystem OperatingSystem `json:"operatingSystem"`
                     items:
                       properties:
                         addonCharts:
@@ -110,14 +70,7 @@ spec:
                       - version
                       type: object
                     type: array
-                required:
-                - kubernetes
-                - operatingSystem
                 type: object
-              releaseVersion:
-                type: string
-            required:
-            - releaseVersion
             type: object
           status:
             description: ReleaseManifestStatus defines the observed state of ReleaseManifest
