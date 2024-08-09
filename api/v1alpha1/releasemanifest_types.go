@@ -25,17 +25,46 @@ import (
 
 // ReleaseManifestSpec defines the desired state of ReleaseManifest
 type ReleaseManifestSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	ReleaseVersion string     `json:"releaseVersion"`
+	Components     Components `json:"components,omitempty"`
+}
 
-	// Foo is an example field of ReleaseManifest. Edit releasemanifest_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+type Components struct {
+	Kubernetes      Kubernetes      `json:"kubernetes"`
+	OperatingSystem OperatingSystem `json:"operatingSystem"`
+	Workloads       []HelmChart     `json:"workloads"`
+}
+
+type HelmChart struct {
+	ReleaseName      string      `json:"releaseName"`
+	Name             string      `json:"chart"`
+	Repository       string      `json:"repository,omitempty"`
+	Version          string      `json:"version"`
+	PrettyName       string      `json:"prettyName,omitempty"`
+	DependencyCharts []HelmChart `json:"dependencyCharts,omitempty"`
+	AddonCharts      []HelmChart `json:"addonCharts,omitempty"`
+}
+
+type Kubernetes struct {
+	K3S  KubernetesDistribution `json:"k3s"`
+	RKE2 KubernetesDistribution `json:"rke2"`
+}
+
+type KubernetesDistribution struct {
+	Version string `json:"version"`
+}
+
+type OperatingSystem struct {
+	Version        string   `json:"version"`
+	ZypperID       string   `json:"zypperID"`
+	CPEScheme      string   `json:"cpeScheme"`
+	RepoGPGPath    string   `json:"repoGPGPath"`
+	SupportedArchs []string `json:"supportedArchs"`
+	PrettyName     string   `json:"prettyName"`
 }
 
 // ReleaseManifestStatus defines the observed state of ReleaseManifest
 type ReleaseManifestStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
 }
 
 // +kubebuilder:object:root=true
