@@ -104,10 +104,6 @@ spec:
                           type: string
                         version:
                           type: string
-                      required:
-                      - chart
-                      - releaseName
-                      - version
                       type: object
                     type: array
                 type: object

@@ -39,11 +39,16 @@ type Components struct {
 }
 
 type HelmChart struct {
+	// +optional
 	ReleaseName string `json:"releaseName"`
-	Name        string `json:"chart"`
-	Repository  string `json:"repository,omitempty"`
-	Version     string `json:"version"`
-	PrettyName  string `json:"prettyName,omitempty"`
+	// +optional
+	Name string `json:"chart"`
+	// +optional
+	Repository string `json:"repository,omitempty"`
+	// +optional
+	Version string `json:"version"`
+	// +optional
+	PrettyName string `json:"prettyName,omitempty"`
 	// +optional
 	// +kubebuilder:validation:Type=array
 	DependencyCharts []HelmChart `json:"dependencyCharts,omitempty"`
