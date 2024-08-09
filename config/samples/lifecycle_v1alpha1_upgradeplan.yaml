@@ -7,4 +7,4 @@ metadata:
   name: upgradeplan-sample
   namespace: cattle-system
 spec:
-  releaseVersion: 3.0.1
+  releaseVersion: releasemanifest-sample
