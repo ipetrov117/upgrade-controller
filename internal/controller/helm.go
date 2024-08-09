@@ -9,7 +9,6 @@ import (
 
 	lifecyclev1alpha1 "github.com/suse-edge/upgrade-controller/api/v1alpha1"
 	"github.com/suse-edge/upgrade-controller/internal/upgrade"
-	"github.com/suse-edge/upgrade-controller/pkg/release"
 
 	helmcattlev1 "github.com/k3s-io/helm-controller/pkg/apis/helm.cattle.io/v1"
 	helmrelease "helm.sh/helm/v3/pkg/release"
@@ -67,14 +66,14 @@ func retrieveHelmRelease(name string) (*helmrelease.Release, error) {
 }
 
 // Updates an existing HelmChart resource in order to trigger an upgrade.
-func (r *UpgradePlanReconciler) updateHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *helmcattlev1.HelmChart, releaseChart *release.HelmChart) error {
+func (r *UpgradePlanReconciler) updateHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *helmcattlev1.HelmChart, releaseChart *lifecyclev1alpha1.HelmChart) error {
 	backoffLimit := int32(6)
 
 	if chart.Annotations == nil {
 		chart.Annotations = map[string]string{}
 	}
 	chart.Annotations[upgrade.PlanAnnotation] = upgradePlan.Name
-	chart.Annotations[upgrade.ReleaseAnnotation] = upgradePlan.Spec.ReleaseVersion
+	chart.Annotations[upgrade.ReleaseRef] = upgradePlan.Spec.ReleaseRef
 	chart.Spec.ChartContent = ""
 	chart.Spec.Chart = releaseChart.Name
 	chart.Spec.Version = releaseChart.Version
@@ -86,7 +85,7 @@ func (r *UpgradePlanReconciler) updateHelmChart(ctx context.Context, upgradePlan
 
 // Creates a HelmChart resource in order to trigger an upgrade
 // using the information from an existing Helm release.
-func (r *UpgradePlanReconciler) createHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, installedChart *helmrelease.Release, releaseChart *release.HelmChart) error {
+func (r *UpgradePlanReconciler) createHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, installedChart *helmrelease.Release, releaseChart *lifecyclev1alpha1.HelmChart) error {
 	backoffLimit := int32(6)
 	var values []byte
 
@@ -108,8 +107,8 @@ func (r *UpgradePlanReconciler) createHelmChart(ctx context.Context, upgradePlan
 			Name:      installedChart.Name,
 			Namespace: upgrade.ChartNamespace,
 			Annotations: map[string]string{
-				upgrade.PlanAnnotation:    upgradePlan.Name,
-				upgrade.ReleaseAnnotation: upgradePlan.Spec.ReleaseVersion,
+				upgrade.PlanAnnotation: upgradePlan.Name,
+				upgrade.ReleaseRef:     upgradePlan.Spec.ReleaseRef,
 			},
 		},
 		Spec: helmcattlev1.HelmChartSpec{
@@ -125,7 +124,7 @@ func (r *UpgradePlanReconciler) createHelmChart(ctx context.Context, upgradePlan
 	return r.Create(ctx, chart)
 }
 
-func (r *UpgradePlanReconciler) upgradeHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, releaseChart *release.HelmChart) (upgrade.HelmChartState, error) {
+func (r *UpgradePlanReconciler) upgradeHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, releaseChart *lifecyclev1alpha1.HelmChart) (upgrade.HelmChartState, error) {
 	helmRelease, err := retrieveHelmRelease(releaseChart.ReleaseName)
 	if err != nil {
 		if errors.Is(err, helmdriver.ErrReleaseNotFound) {
@@ -152,8 +151,8 @@ func (r *UpgradePlanReconciler) upgradeHelmChart(ctx context.Context, upgradePla
 		return upgrade.ChartStateInProgress, r.updateHelmChart(ctx, upgradePlan, chart, releaseChart)
 	}
 
-	releaseVersion := chart.Annotations[upgrade.ReleaseAnnotation]
-	if releaseVersion != upgradePlan.Spec.ReleaseVersion {
+	releaseRef := chart.Annotations[upgrade.ReleaseRef]
+	if releaseRef != upgradePlan.Spec.ReleaseRef {
 		return upgrade.ChartStateVersionAlreadyInstalled, nil
 	}
 

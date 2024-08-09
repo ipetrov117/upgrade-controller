@@ -132,18 +132,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	manifestsDir := "manifests" // TODO: Figure out the proper place
-	releases, err := parseReleaseManifests(manifestsDir)
-	if err != nil {
-		setupLog.Error(err, "unable to parse release manifests")
-		os.Exit(1)
-	}
+	// manifestsDir := "manifests" // TODO: Figure out the proper place
+	// releases, err := parseReleaseManifests(manifestsDir)
+	// if err != nil {
+	// 	setupLog.Error(err, "unable to parse release manifests")
+	// 	os.Exit(1)
+	// }
 
 	if err = (&controller.UpgradePlanReconciler{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("upgrade-plan-controller"),
-		Releases: releases,
+		// Releases: releases,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "UpgradePlan")
 		os.Exit(1)

@@ -6,7 +6,6 @@ import (
 
 	lifecyclev1alpha1 "github.com/suse-edge/upgrade-controller/api/v1alpha1"
 	"github.com/suse-edge/upgrade-controller/internal/upgrade"
-	"github.com/suse-edge/upgrade-controller/pkg/release"
 	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -15,7 +14,7 @@ func getChartConditionType(prettyName string) string {
 	return fmt.Sprintf("%sUpgraded", prettyName)
 }
 
-func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *release.HelmChart) (ctrl.Result, error) {
+func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *lifecyclev1alpha1.HelmChart) (ctrl.Result, error) {
 	conditionType := getChartConditionType(chart.PrettyName)
 	if len(chart.DependencyCharts) != 0 {
 		for _, depChart := range chart.DependencyCharts {
