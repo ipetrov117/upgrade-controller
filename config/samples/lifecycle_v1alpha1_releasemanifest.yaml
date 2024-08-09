@@ -1,0 +1,9 @@
+apiVersion: lifecycle.suse.com/v1alpha1
+kind: ReleaseManifest
+metadata:
+  labels:
+    app.kubernetes.io/name: upgrade-controller
+    app.kubernetes.io/managed-by: kustomize
+  name: releasemanifest-sample
+spec:
+  # TODO(user): Add fields here
