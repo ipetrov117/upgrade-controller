@@ -89,13 +89,11 @@ spec:
                     items:
                       properties:
                         addonCharts:
-                          items: {}
-                          type: array
+                          x-kubernetes-preserve-unknown-fields: true
                         chart:
                           type: string
                         dependencyCharts:
-                          items: {}
-                          type: array
+                          x-kubernetes-preserve-unknown-fields: true
                         prettyName:
                           type: string
                         releaseName:
@@ -104,8 +102,15 @@ spec:
                           type: string
                         version:
                           type: string
+                      required:
+                      - chart
+                      - releaseName
+                      - version
                       type: object
                     type: array
+                required:
+                - kubernetes
+                - operatingSystem
                 type: object
               releaseVersion:
                 type: string
