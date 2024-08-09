@@ -45,8 +45,10 @@ type HelmChart struct {
 	Version     string `json:"version"`
 	PrettyName  string `json:"prettyName,omitempty"`
 	// +optional
+	// +kubebuilder:validation:Type=array
 	DependencyCharts []HelmChart `json:"dependencyCharts,omitempty"`
 	// +optional
+	// +kubebuilder:validation:Type=array
 	AddonCharts []HelmChart `json:"addonCharts,omitempty"`
 }
 
