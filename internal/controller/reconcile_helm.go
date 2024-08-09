@@ -15,7 +15,7 @@ func getChartConditionType(prettyName string) string {
 	return fmt.Sprintf("%sUpgraded", prettyName)
 }
 
-func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *release.HelmChart2) (ctrl.Result, error) {
+func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *release.HelmChart) (ctrl.Result, error) {
 	conditionType := getChartConditionType(chart.PrettyName)
 	if len(chart.DependencyCharts) != 0 {
 		for _, depChart := range chart.DependencyCharts {
