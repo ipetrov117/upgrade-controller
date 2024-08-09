@@ -21,6 +21,7 @@ const (
 //go:embed templates/os-upgrade.sh.tpl
 var osUpgradeScript string
 
+// TODO: FIX FOR NEW CRD
 func OSUpgradeSecret(releaseOS *release.OperatingSystem) (*corev1.Secret, error) {
 	const (
 		secretName = "os-upgrade-secret"

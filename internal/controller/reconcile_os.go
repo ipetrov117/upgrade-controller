@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// TODO: FIX FOR new CRD
 func (r *UpgradePlanReconciler) reconcileOS(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, release *release.Release) (ctrl.Result, error) {
 	secret, err := upgrade.OSUpgradeSecret(&release.Components.OperatingSystem)
 	if err != nil {

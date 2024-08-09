@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	planNamespace     = "cattle-system"
-	PlanAnnotation    = "lifecycle.suse.com/upgrade-plan"
-	ReleaseAnnotation = "lifecycle.suse.com/release"
-	controlPlaneKey   = "control-plane"
-	workersKey        = "workers"
+	planNamespace   = "cattle-system"
+	PlanAnnotation  = "lifecycle.suse.com/upgrade-plan"
+	ReleaseRef      = "lifecycle.suse.com/release-ref"
+	controlPlaneKey = "control-plane"
+	workersKey      = "workers"
 
 	ControlPlaneLabel = "node-role.kubernetes.io/control-plane"
 )
