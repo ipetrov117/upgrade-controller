@@ -27,11 +27,11 @@ spec:
       chart: rancher
       version: v2.8.5
       repository: https://charts.rancher.com/server-charts/prime
-    # - prettyName: Longhorn
-    #   releaseName: longhorn
-    #   chart: longhorn
-    #   version: v1.6.1
-    #   repository: https://charts.longhorn.io
+    - prettyName: Longhorn
+      releaseName: longhorn
+      chart: longhorn
+      version: v1.6.1
+      repository: https://charts.longhorn.io
     - prettyName: MetalLB
       releaseName: metallb
       chart: oci://registry.suse.com/edge/metallb-chart
@@ -78,16 +78,16 @@ spec:
       - releaseName: sriov-crd
         chart: oci://registry.suse.com/edge/sriov-crd-chart
         version: 1.2.2
-    # - prettyName: Akri
-    #   releaseName: akri
-    #   chart: oci://registry.suse.com/edge/akri-chart
-    #   version: 0.12.20
-    #   addonCharts:
-    #   - releaseName: akri-dashboard-extension
-    #     chart: oci://registry.suse.com/edge/akri-dashboard-extension-chart
-    #     version: 1.0.0
-    # - prettyName: Metal3
-    #   releaseName: metal3
-    #   chart: oci://registry.suse.com/edge/metal3-chart
-    #   version: 0.7.1
+    - prettyName: Akri
+      releaseName: akri
+      chart: oci://registry.suse.com/edge/akri-chart
+      version: 0.12.20
+      addonCharts:
+      - releaseName: akri-dashboard-extension
+        chart: oci://registry.suse.com/edge/akri-dashboard-extension-chart
+        version: 1.0.0
+    - prettyName: Metal3
+      releaseName: metal3
+      chart: oci://registry.suse.com/edge/metal3-chart
+      version: 0.7.1
 
