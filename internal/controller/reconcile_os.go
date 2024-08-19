@@ -31,7 +31,16 @@ func (r *UpgradePlanReconciler) reconcileOS(ctx context.Context, upgradePlan *li
 		return ctrl.Result{}, r.createObject(ctx, upgradePlan, secret)
 	}
 
-	drainControlPlane, drainWorker := parseDrainOptions(upgradePlan)
+	nodeList := &corev1.NodeList{}
+	if err := r.List(ctx, nodeList); err != nil {
+		return ctrl.Result{}, fmt.Errorf("listing nodes: %w", err)
+	}
+
+	var drainControlPlane, drainWorker bool
+	if len(nodeList.Items) > 1 {
+		drainControlPlane, drainWorker = parseDrainOptions(upgradePlan)
+	}
+
 	controlPlanePlan := upgrade.OSControlPlanePlan(releaseVersion, secret.Name, releaseOS, drainControlPlane, identifierAnnotations)
 	if err = r.Get(ctx, client.ObjectKeyFromObject(controlPlanePlan), controlPlanePlan); err != nil {
 		if !errors.IsNotFound(err) {
@@ -45,11 +54,6 @@ func (r *UpgradePlanReconciler) reconcileOS(ctx context.Context, upgradePlan *li
 	selector, err := metav1.LabelSelectorAsSelector(controlPlanePlan.Spec.NodeSelector)
 	if err != nil {
 		return ctrl.Result{}, fmt.Errorf("parsing node selector: %w", err)
-	}
-
-	nodeList := &corev1.NodeList{}
-	if err := r.List(ctx, nodeList); err != nil {
-		return ctrl.Result{}, fmt.Errorf("listing nodes: %w", err)
 	}
 
 	if !isOSUpgraded(nodeList, selector, releaseOS.PrettyName) {
