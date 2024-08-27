@@ -96,7 +96,7 @@ func (r *UpgradePlanReconciler) executePlan(ctx context.Context, upgradePlan *li
 		return ctrl.Result{}, r.createReleaseManifest(ctx, upgradePlan)
 	}
 
-	if len(upgradePlan.Status.Conditions) == 0 {
+	if len(upgradePlan.Status.ActiveConditions) == 0 {
 		setPendingCondition(upgradePlan, lifecyclev1alpha1.OperatingSystemUpgradedCondition, upgradePendingMessage("OS"))
 		setPendingCondition(upgradePlan, lifecyclev1alpha1.KubernetesUpgradedCondition, upgradePendingMessage("Kubernetes"))
 
@@ -108,9 +108,9 @@ func (r *UpgradePlanReconciler) executePlan(ctx context.Context, upgradePlan *li
 	}
 
 	switch {
-	case !meta.IsStatusConditionTrue(upgradePlan.Status.Conditions, lifecyclev1alpha1.OperatingSystemUpgradedCondition):
+	case !meta.IsStatusConditionTrue(upgradePlan.Status.ActiveConditions, lifecyclev1alpha1.OperatingSystemUpgradedCondition):
 		return r.reconcileOS(ctx, upgradePlan, release.Spec.ReleaseVersion, &release.Spec.Components.OperatingSystem)
-	case !meta.IsStatusConditionTrue(upgradePlan.Status.Conditions, lifecyclev1alpha1.KubernetesUpgradedCondition):
+	case !meta.IsStatusConditionTrue(upgradePlan.Status.ActiveConditions, lifecyclev1alpha1.KubernetesUpgradedCondition):
 		return r.reconcileKubernetes(ctx, upgradePlan, &release.Spec.Components.Kubernetes)
 	}
 
@@ -122,6 +122,10 @@ func (r *UpgradePlanReconciler) executePlan(ctx context.Context, upgradePlan *li
 
 	logger := log.FromContext(ctx)
 	logger.Info("Upgrade completed")
+
+	upgradePlan.Status.LastCompletedConditions = upgradePlan.Status.ActiveConditions
+	upgradePlan.Status.ActiveConditions = []metav1.Condition{}
+	upgradePlan.Status.LastAppliedReleaseVersion = release.Spec.ReleaseVersion
 
 	return ctrl.Result{}, nil
 }
@@ -141,7 +145,7 @@ func (r *UpgradePlanReconciler) createObject(ctx context.Context, upgradePlan *l
 }
 
 func isHelmUpgradeFinished(plan *lifecyclev1alpha1.UpgradePlan, conditionType string) bool {
-	condition := meta.FindStatusCondition(plan.Status.Conditions, conditionType)
+	condition := meta.FindStatusCondition(plan.Status.ActiveConditions, conditionType)
 
 	if condition == nil {
 		return false
@@ -203,32 +207,32 @@ type setCondition func(plan *lifecyclev1alpha1.UpgradePlan, conditionType string
 
 func setPendingCondition(plan *lifecyclev1alpha1.UpgradePlan, conditionType, message string) {
 	condition := metav1.Condition{Type: conditionType, Status: metav1.ConditionUnknown, Reason: lifecyclev1alpha1.UpgradePending, Message: message}
-	meta.SetStatusCondition(&plan.Status.Conditions, condition)
+	meta.SetStatusCondition(&plan.Status.ActiveConditions, condition)
 }
 
 func setErrorCondition(plan *lifecyclev1alpha1.UpgradePlan, conditionType, message string) {
 	condition := metav1.Condition{Type: conditionType, Status: metav1.ConditionUnknown, Reason: lifecyclev1alpha1.UpgradeError, Message: message}
-	meta.SetStatusCondition(&plan.Status.Conditions, condition)
+	meta.SetStatusCondition(&plan.Status.ActiveConditions, condition)
 }
 
 func setInProgressCondition(plan *lifecyclev1alpha1.UpgradePlan, conditionType, message string) {
 	condition := metav1.Condition{Type: conditionType, Status: metav1.ConditionFalse, Reason: lifecyclev1alpha1.UpgradeInProgress, Message: message}
-	meta.SetStatusCondition(&plan.Status.Conditions, condition)
+	meta.SetStatusCondition(&plan.Status.ActiveConditions, condition)
 }
 
 func setSuccessfulCondition(plan *lifecyclev1alpha1.UpgradePlan, conditionType, message string) {
 	condition := metav1.Condition{Type: conditionType, Status: metav1.ConditionTrue, Reason: lifecyclev1alpha1.UpgradeSucceeded, Message: message}
-	meta.SetStatusCondition(&plan.Status.Conditions, condition)
+	meta.SetStatusCondition(&plan.Status.ActiveConditions, condition)
 }
 
 func setFailedCondition(plan *lifecyclev1alpha1.UpgradePlan, conditionType, message string) {
 	condition := metav1.Condition{Type: conditionType, Status: metav1.ConditionFalse, Reason: lifecyclev1alpha1.UpgradeFailed, Message: message}
-	meta.SetStatusCondition(&plan.Status.Conditions, condition)
+	meta.SetStatusCondition(&plan.Status.ActiveConditions, condition)
 }
 
 func setSkippedCondition(plan *lifecyclev1alpha1.UpgradePlan, conditionType, message string) {
 	condition := metav1.Condition{Type: conditionType, Status: metav1.ConditionFalse, Reason: lifecyclev1alpha1.UpgradeSkipped, Message: message}
-	meta.SetStatusCondition(&plan.Status.Conditions, condition)
+	meta.SetStatusCondition(&plan.Status.ActiveConditions, condition)
 }
 
 func (r *UpgradePlanReconciler) findUpgradePlanFromJob(ctx context.Context, job client.Object) []reconcile.Request {

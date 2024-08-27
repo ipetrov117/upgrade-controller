@@ -76,12 +76,25 @@ type HelmValues struct {
 
 // UpgradePlanStatus defines the observed state of UpgradePlan
 type UpgradePlanStatus struct {
+	// ActiveConditions are the conditions of the currently running upgrade operation
 	// +listType=map
 	// +listMapKey=type
 	// +patchStrategy=merge
 	// +patchMergeKey=type
 	// +optional
-	Conditions []metav1.Condition `json:"conditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+	ActiveConditions []metav1.Condition `json:"activeConditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+	// LastCompletedConditions are the conditions of the last completed upgrade operation
+	// +listType=map
+	// +listMapKey=type
+	// +patchStrategy=merge
+	// +patchMergeKey=type
+	// +optional
+	LastCompletedConditions []metav1.Condition `json:"lastCompletedConditions,omitempty" patchStrategy:"merge" patchMergeKey:"type" protobuf:"bytes,1,rep,name=conditions"`
+
+	// LastAppliedReleaseVersion represents the release version
+	// that was last successfully applied on the environment by this UpgradePlan
+	LastAppliedReleaseVersion string `json:"lastAppliedReleaseVersion,omitempty"`
 }
 
 // +kubebuilder:object:root=true
