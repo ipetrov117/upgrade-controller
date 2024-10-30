@@ -8,20 +8,29 @@ import (
 	"github.com/suse-edge/upgrade-controller/internal/upgrade"
 	corev1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *lifecyclev1alpha1.HelmChart) (ctrl.Result, error) {
+	logger := log.FromContext(ctx)
+	fmt.Printf("-----------------------%s------------------------------------", chart.Name)
 	conditionType := lifecyclev1alpha1.GetChartConditionType(chart.PrettyName)
+	fmt.Println("conditionType: ", conditionType)
+	logger.Info("DependencyCharts: ", len(chart.DependencyCharts))
 
 	if len(chart.DependencyCharts) != 0 {
 		for _, depChart := range chart.DependencyCharts {
+			fmt.Println("depChart: ", depChart)
 			depState, err := r.upgradeHelmChart(ctx, upgradePlan, &depChart)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
 
+			fmt.Println("depState: ", depState)
 			if depState != upgrade.ChartStateSucceeded && depState != upgrade.ChartStateVersionAlreadyInstalled {
 				setCondition, requeue := evaluateHelmChartState(depState)
+				fmt.Println("[30]setCondition: ", setCondition)
+				fmt.Println("[31]requeue: ", requeue)
 				setCondition(upgradePlan, conditionType, depState.FormattedMessage(depChart.ReleaseName))
 
 				return ctrl.Result{Requeue: requeue}, nil
@@ -30,6 +39,8 @@ func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradeP
 	}
 
 	coreState, err := r.upgradeHelmChart(ctx, upgradePlan, chart)
+	fmt.Println("coreState: ", coreState)
+	fmt.Println("err: ", err)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -41,18 +52,23 @@ func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradeP
 
 	if coreState != upgrade.ChartStateSucceeded && coreState != upgrade.ChartStateVersionAlreadyInstalled {
 		setCondition, requeue := evaluateHelmChartState(coreState)
+		fmt.Println("[53]setCondition: ", setCondition)
+		fmt.Println("[54]requeue: ", requeue)
 		setCondition(upgradePlan, conditionType, coreState.FormattedMessage(chart.ReleaseName))
 
 		return ctrl.Result{Requeue: requeue}, nil
 	}
 
+	fmt.Println("AddonCharts: ", len(chart.AddonCharts))
 	if len(chart.AddonCharts) != 0 {
 		for _, addonChart := range chart.AddonCharts {
+			fmt.Println("addonChart: ", addonChart)
 			addonState, err := r.upgradeHelmChart(ctx, upgradePlan, &addonChart)
 			if err != nil {
 				return ctrl.Result{}, err
 			}
 
+			fmt.Println("addonState: ", addonState)
 			switch addonState {
 			case upgrade.ChartStateFailed:
 				r.Recorder.Eventf(upgradePlan, corev1.EventTypeWarning, conditionType,
@@ -76,5 +92,6 @@ func (r *UpgradePlanReconciler) reconcileHelmChart(ctx context.Context, upgradeP
 	// to avoid confusion, when upgrade has been done, use core component message in the component condition
 	setCondition, requeue := evaluateHelmChartState(coreState)
 	setCondition(upgradePlan, conditionType, coreState.FormattedMessage(chart.ReleaseName))
+	fmt.Println("-----------------------------------------------------------")
 	return ctrl.Result{Requeue: requeue}, nil
 }

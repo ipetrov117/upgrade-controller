@@ -32,12 +32,17 @@ import (
 )
 
 func newHelmClient() (*helmstorage.Storage, error) {
+	fmt.Println("newHelmClient")
 	cfg, err := config.GetConfig()
+	fmt.Println("cfg: ", cfg)
+	fmt.Println("err: ", err)
 	if err != nil {
 		return nil, fmt.Errorf("retrieving cluster config: %w", err)
 	}
 
 	k8sClient, err := kubernetes.NewForConfig(cfg)
+	fmt.Println("k8sClient: ", k8sClient)
+	fmt.Println("err: ", err)
 	if err != nil {
 		return nil, fmt.Errorf("creating kubernetes client: %w", err)
 	}
@@ -49,28 +54,37 @@ func newHelmClient() (*helmstorage.Storage, error) {
 }
 
 func retrieveHelmRelease(name string) (*helmrelease.Release, error) {
+	fmt.Println("retrieveHelmRelease")
 	helmClient, err := newHelmClient()
+	fmt.Println("helmClient: ", helmClient)
+	fmt.Println("err: ", err)
 	if err != nil {
 		return nil, fmt.Errorf("initializing helm client: %w", err)
 	}
 
 	helmReleases, err := helmClient.History(name)
+	fmt.Println("helmReleases: ", helmReleases)
+	fmt.Println("err: ", err)
 	if err != nil {
 		return nil, err
 	}
 
+	fmt.Println("helmReleases(len): ", len(helmReleases))
 	if len(helmReleases) == 0 {
 		return nil, helmdriver.ErrReleaseNotFound
 	}
 
+	fmt.Println("before reverse")
 	helmutil.Reverse(helmReleases, helmutil.SortByRevision)
 	helmRelease := helmReleases[0]
+	fmt.Println("after")
 
 	return helmRelease, nil
 }
 
 // Updates an existing HelmChart resource in order to trigger an upgrade.
 func (r *UpgradePlanReconciler) updateHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, chart *helmcattlev1.HelmChart, releaseChart *lifecyclev1alpha1.HelmChart) error {
+	fmt.Println("updateHelmChart")
 	backoffLimit := int32(6)
 
 	var userValues *apiextensionsv1.JSON
@@ -110,6 +124,7 @@ func (r *UpgradePlanReconciler) updateHelmChart(ctx context.Context, upgradePlan
 // Creates a HelmChart resource in order to trigger an upgrade
 // using the information from an existing Helm release.
 func (r *UpgradePlanReconciler) createHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, installedChart *helmrelease.Release, releaseChart *lifecyclev1alpha1.HelmChart) error {
+	fmt.Println("createHelmChart")
 	backoffLimit := int32(6)
 
 	var userValues *apiextensionsv1.JSON
@@ -224,29 +239,39 @@ func mergeMaps(m1, m2 map[string]any) map[string]any {
 }
 
 func (r *UpgradePlanReconciler) upgradeHelmChart(ctx context.Context, upgradePlan *lifecyclev1alpha1.UpgradePlan, releaseChart *lifecyclev1alpha1.HelmChart) (upgrade.HelmChartState, error) {
+	fmt.Println("upgradeHelmChart")
 	helmRelease, err := retrieveHelmRelease(releaseChart.ReleaseName)
+	fmt.Println("helmRelease: ", helmRelease)
+	fmt.Println("err: ", err)
 	if err != nil {
 		if errors.Is(err, helmdriver.ErrReleaseNotFound) {
+			fmt.Println("ERROR IS ErrReleaseNotFound")
 			return upgrade.ChartStateNotInstalled, nil
 		}
+		fmt.Println("UNKOWN STATE")
 		return upgrade.ChartStateUnknown, fmt.Errorf("retrieving helm release: %w", err)
 	}
 
 	chart := &helmcattlev1.HelmChart{}
 
+	fmt.Println("GETTING CHART")
 	if err = r.Get(ctx, upgrade.ChartNamespacedName(helmRelease.Name), chart); err != nil {
 		if !apierrors.IsNotFound(err) {
+			fmt.Println("NOT FOUND")
 			return upgrade.ChartStateUnknown, err
 		}
 
 		if helmRelease.Chart.Metadata.Version == releaseChart.Version {
+			fmt.Println("ALREADY INSTALLED")
 			return upgrade.ChartStateVersionAlreadyInstalled, nil
 		}
 
+		fmt.Println("CREATING CHART")
 		return upgrade.ChartStateInProgress, r.createHelmChart(ctx, upgradePlan, helmRelease, releaseChart)
 	}
 
 	if chart.Spec.Version != releaseChart.Version {
+		fmt.Println("UPDATE CHART")
 		return upgrade.ChartStateInProgress, r.updateHelmChart(ctx, upgradePlan, chart, releaseChart)
 	}
 
