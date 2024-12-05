@@ -45,16 +45,60 @@ spec:
                     properties:
                       k3s:
                         properties:
+                          coreComponents:
+                            items:
+                              properties:
+                                containerImages:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                name:
+                                  type: string
+                                type:
+                                  enum:
+                                  - HelmChart
+                                  - Deployment
+                                  type: string
+                                version:
+                                  type: string
+                              required:
+                              - name
+                              - type
+                              type: object
+                            type: array
                           version:
                             type: string
                         required:
+                        - coreComponents
                         - version
                         type: object
                       rke2:
                         properties:
+                          coreComponents:
+                            items:
+                              properties:
+                                containerImages:
+                                  additionalProperties:
+                                    type: string
+                                  type: object
+                                name:
+                                  type: string
+                                type:
+                                  enum:
+                                  - HelmChart
+                                  - Deployment
+                                  type: string
+                                version:
+                                  type: string
+                              required:
+                              - name
+                              - type
+                              type: object
+                            type: array
                           version:
                             type: string
                         required:
+                        - coreComponents
                         - version
                         type: object
                     required:

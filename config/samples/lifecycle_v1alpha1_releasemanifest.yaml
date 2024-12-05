@@ -12,6 +12,24 @@ spec:
     kubernetes:
       k3s:
         version: v1.30.3+k3s1
+        coreComponents:
+          helm:
+          - name: foo
+            version: bar.baz
+          deployment:
+          - name: foo
+            containers:
+            - name:
+              image: 
+        coreComponents:
+        - name: traefik
+          version: foo.bar
+          type: HelmChart
+        - name: coredns
+          containerImages:
+            coredns: foo/bar:baz
+            foo: foo/bar:baz
+          type: Deployment
       rke2:
         version: v1.30.3+rke2r1
     operatingSystem:

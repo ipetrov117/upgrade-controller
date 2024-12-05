@@ -7,4 +7,4 @@ metadata:
   name: upgrade-plan-3-1-0
   namespace: upgrade-controller-system
 spec:
-  releaseVersion: 3.1.0
+  releaseVersion: 3.2.0

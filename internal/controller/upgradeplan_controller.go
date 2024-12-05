@@ -64,6 +64,7 @@ type UpgradePlanReconciler struct {
 // +kubebuilder:rbac:groups=upgrade.cattle.io,resources=plans,verbs=create;list;get;watch;delete
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=watch;list
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;delete;create;watch
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch
 // +kubebuilder:rbac:groups=core,resources=events,verbs=create;patch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create
 // +kubebuilder:rbac:groups=batch,resources=jobs/status,verbs=get
@@ -259,6 +260,13 @@ func isHelmUpgradeFinished(plan *lifecyclev1alpha1.UpgradePlan, conditionType st
 	return false
 }
 
+func isJobFinished(conditions []batchv1.JobCondition) bool {
+	return slices.ContainsFunc(conditions, func(condition batchv1.JobCondition) bool {
+		return condition.Status == corev1.ConditionTrue &&
+			(condition.Type == batchv1.JobComplete || condition.Type == batchv1.JobFailed)
+	})
+}
+
 func parseDrainOptions(nodeList *corev1.NodeList, plan *lifecyclev1alpha1.UpgradePlan) (drainControlPlane bool, drainWorker bool) {
 	var controlPlaneCounter, workerCounter int
 	for _, node := range nodeList.Items {
@@ -412,14 +420,6 @@ func (r *UpgradePlanReconciler) SetupWithManager(mgr ctrl.Manager) error {
 				return false
 			},
 			UpdateFunc: func(e event.UpdateEvent) bool {
-				// Only requeue an upgrade plan when a respective job finishes.
-				isJobFinished := func(conditions []batchv1.JobCondition) bool {
-					return slices.ContainsFunc(conditions, func(condition batchv1.JobCondition) bool {
-						return condition.Status == corev1.ConditionTrue &&
-							(condition.Type == batchv1.JobComplete || condition.Type == batchv1.JobFailed)
-					})
-				}
-
 				return isJobFinished(e.ObjectNew.(*batchv1.Job).Status.Conditions) &&
 					!isJobFinished(e.ObjectOld.(*batchv1.Job).Status.Conditions)
 			},

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	lifecyclev1alpha1 "github.com/suse-edge/upgrade-controller/api/v1alpha1"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -223,49 +224,172 @@ func TestTargetKubernetesVersion(t *testing.T) {
 	}
 
 	tests := []struct {
-		name            string
-		nodes           *corev1.NodeList
-		expectedVersion string
-		expectedError   string
+		name                 string
+		nodes                *corev1.NodeList
+		expectedDistribution *lifecyclev1alpha1.KubernetesDistribution
+		expectedError        string
 	}{
 		{
 			name:          "Empty node list",
 			nodes:         &corev1.NodeList{},
-			expectedError: "unable to determine current kubernetes version due to empty node list",
+			expectedError: "unable to determine current kubernetes distribution due to empty node list",
 		},
 		{
-			name: "Unsupported Kubernetes version",
+			name: "Unsupported Kubernetes distribution",
 			nodes: &corev1.NodeList{
 				Items: []corev1.Node{{Status: corev1.NodeStatus{NodeInfo: corev1.NodeSystemInfo{KubeletVersion: "v1.30.3"}}}},
 			},
-			expectedError: "upgrading from kubernetes version v1.30.3 is not supported",
+			expectedError: "unsupported kubernetes distribution detected in version v1.30.3",
 		},
 		{
-			name: "Target k3s version",
+			name: "Target k3s distribution",
 			nodes: &corev1.NodeList{
 				Items: []corev1.Node{{Status: corev1.NodeStatus{NodeInfo: corev1.NodeSystemInfo{KubeletVersion: "v1.28.12+k3s1"}}}},
 			},
-			expectedVersion: "v1.30.3+k3s1",
+			expectedDistribution: &kubernetes.K3S,
 		},
 		{
-			name: "Target RKE2 version",
+			name: "Target RKE2 distribution",
 			nodes: &corev1.NodeList{
 				Items: []corev1.Node{{Status: corev1.NodeStatus{NodeInfo: corev1.NodeSystemInfo{KubeletVersion: "v1.28.12+rke2r1"}}}},
 			},
-			expectedVersion: "v1.30.3+rke2r1",
+			expectedDistribution: &kubernetes.RKE2,
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			version, err := targetKubernetesVersion(test.nodes, kubernetes)
+			k8sDistro, err := targetKubernetesDistribution(test.nodes, kubernetes)
 			if test.expectedError != "" {
 				require.Error(t, err)
 				assert.EqualError(t, err, test.expectedError)
-				assert.Empty(t, version)
+				assert.Nil(t, k8sDistro)
 			} else {
 				require.NoError(t, err)
-				assert.Equal(t, test.expectedVersion, version)
+				assert.Equal(t, test.expectedDistribution, k8sDistro)
+			}
+		})
+	}
+}
+
+func TestIsK8sCoreDeploymentUpgraded(t *testing.T) {
+	readyStatus := appsv1.DeploymentStatus{
+		Replicas:      1,
+		ReadyReplicas: 1,
+	}
+
+	tests := []struct {
+		name                   string
+		upgardeContainerImages map[string]string
+		deployment             *appsv1.Deployment
+		expectedResult         bool
+	}{
+		{
+			name: "Deployment not yet upgraded",
+			upgardeContainerImages: map[string]string{
+				"coredns": "rancher/mirrored-coredns-coredns:1.11.3",
+			},
+			deployment: &appsv1.Deployment{
+				Status: readyStatus,
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "coredns",
+									Image: "rancher/mirrored-coredns-coredns:1.11.2",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			name: "Deployment under upgrade",
+			deployment: &appsv1.Deployment{
+				Status: appsv1.DeploymentStatus{
+					Replicas:      1,
+					ReadyReplicas: 0,
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			name: "Deployment missing upgrade container",
+			upgardeContainerImages: map[string]string{
+				"coredns": "rancher/mirrored-coredns-coredns:1.11.3",
+			},
+			deployment: &appsv1.Deployment{
+				Status: readyStatus,
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "foo",
+									Image: "foo/bar:0.0.0",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedResult: false,
+		},
+		{
+			name: "Deployment upgraded - public registry",
+			upgardeContainerImages: map[string]string{
+				"coredns": "rancher/mirrored-coredns-coredns:1.11.3",
+			},
+			deployment: &appsv1.Deployment{
+				Status: readyStatus,
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "coredns",
+									Image: "rancher/mirrored-coredns-coredns:1.11.3",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedResult: true,
+		},
+		{
+			name: "Deployment upgraded - private registry",
+			upgardeContainerImages: map[string]string{
+				"coredns": "rancher/mirrored-coredns-coredns:1.11.3",
+			},
+			deployment: &appsv1.Deployment{
+				Status: readyStatus,
+				Spec: appsv1.DeploymentSpec{
+					Template: corev1.PodTemplateSpec{
+						Spec: corev1.PodSpec{
+							Containers: []corev1.Container{
+								{
+									Name:  "coredns",
+									Image: "foo.bar:8080/rancher/mirrored-coredns-coredns:1.11.3",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedResult: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.expectedResult {
+				assert.True(t, isK8sCoreDeploymentUpgraded(test.deployment, test.upgardeContainerImages))
+			} else {
+				assert.False(t, isK8sCoreDeploymentUpgraded(test.deployment, test.upgardeContainerImages))
 			}
 		})
 	}

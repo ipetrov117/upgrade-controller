@@ -96,7 +96,23 @@ type Kubernetes struct {
 }
 
 type KubernetesDistribution struct {
-	Version string `json:"version"`
+	Version        string          `json:"version"`
+	CoreComponents []CoreComponent `json:"coreComponents"`
+}
+
+// +kubebuilder:validation:Enum=HelmChart;Deployment
+type CoreComponentType string
+
+const (
+	HelmChartType  CoreComponentType = "HelmChart"
+	DeploymentType CoreComponentType = "Deployment"
+)
+
+type CoreComponent struct {
+	Name            string            `json:"name"`
+	Version         string            `json:"version,omitempty"`
+	ContainerImages map[string]string `json:"containerImages,omitempty"`
+	Type            CoreComponentType `json:"type"`
 }
 
 type OperatingSystem struct {
